@@ -1,23 +1,28 @@
-name: Format and Lint
+name: Format, Lint and Test
 
 on: [push, pull_request]
 
 jobs:
-  format-lint:
+  format-lint-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-    
-    - name: Instalar herramientas
-      run: pip install black flake8
-    
+        python-version: '3.12'
+
+    - name: Instalar dependencias
+      run: |
+        pip install -r requirements.txt
+        pip install black flake8
+
     - name: Formateo con Black
       run: black --check .
-    
+
     - name: Linting con Flake8
-      run: flake8 .
+      run: flake8 . --max-line-length=88 --extend-ignore=E203,W503
+
+    - name: Ejecutar tests con pytest
+      run: pytest tests/ -v --cov=pipeline --cov-report=term-missing --cov-fail-under=80
