@@ -49,9 +49,11 @@ class CSVDataSource(DataSource):
 class Ingestor:
     """Componente principal de ingesta con idempotencia"""
 
-    def __init__(self):
-        self.input_dir = Path(os.getenv("INPUT_DIR", "data/input"))
-        self.output_dir = Path(os.getenv("INTERMEDIATE_DIR", "data/intermediate"))
+    def __init__(self, input_dir: str | None = None, output_dir: str | None = None):
+        self.input_dir = Path(input_dir or os.getenv("INPUT_DIR", "data/input"))
+        self.output_dir = Path(
+            output_dir or os.getenv("INTERMEDIATE_DIR", "data/intermediate")
+        )
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.processed_hashes = self._load_processed_hashes()
         self.factory = DataSourceFactory()
