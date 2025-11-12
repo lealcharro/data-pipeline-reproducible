@@ -1,0 +1,6 @@
+id,timestamp,value,category
+1,2025-11-09T14:00:00Z,42.5,sensor_a
+2,2025-11-09T14:01:00Z,38.2,sensor_b
+3,2025-11-09T14:02:00Z,45.8,sensor_a
+4,2025-11-09T14:03:00Z,51.3,sensor_c
+5,2025-11-09T14:04:00Z,39.7,sensor_b
