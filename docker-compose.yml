@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/input:${INPUT_DIR:-/data/input}:ro
+      - ./data/intermediate:${INTERMEDIATE_DIR:-/data/intermediate}
+    env_file:
+      - .env
+    command: python -m pipeline.ingestor.main
+    networks:
+      - etl-network
+
+  transformer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - ingestor
+    volumes:
+      - ./data/intermediate:${INTERMEDIATE_DIR:-/data/intermediate}:ro
+      - ./data/output:${OUTPUT_DIR:-/data/output}
+    env_file:
+      - .env
+    command: python -m pipeline.transformer.main
+    networks:
+      - etl-network
+
+  publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - transformer
+    volumes:
+      - ./data/output:${OUTPUT_DIR:-/data/output}
+    env_file:
+      - .env
+    command: python -m pipeline.publisher.main
+    networks:
+      - etl-network
+
+networks:
+  etl-network:
+    driver: bridge
+
+volumes:
+  etl-data:
