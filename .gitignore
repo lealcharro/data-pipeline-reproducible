@@ -15,3 +15,7 @@ dist/
 build/
 .gitleaks.cache
 .github/*.log
+data/intermediate/*
+data/output/*
+!data/intermediate/.gitkeep
+!data/output/.gitkeep
