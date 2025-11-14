@@ -1,17 +1,17 @@
 import hashlib
 import json
 import logging
-import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
+from pipeline.config import LOG_LEVEL, INPUT_DIR, INTERMEDIATE_DIR
 
 import pandas as pd
 
 from pipeline.contracts.schemas import InputRecord
 
-log_level = os.getenv("LOG_LEVEL", "INFO")
+log_level = LOG_LEVEL
 logging.basicConfig(level=getattr(logging, log_level))
 logger = logging.getLogger(__name__)
 
@@ -50,10 +50,8 @@ class Ingestor:
     """Componente principal de ingesta con idempotencia"""
 
     def __init__(self, input_dir: str | None = None, output_dir: str | None = None):
-        self.input_dir = Path(input_dir or os.getenv("INPUT_DIR", "data/input"))
-        self.output_dir = Path(
-            output_dir or os.getenv("INTERMEDIATE_DIR", "data/intermediate")
-        )
+        self.input_dir = Path(input_dir or INPUT_DIR)
+        self.output_dir = Path(output_dir or INTERMEDIATE_DIR)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.processed_hashes = self._load_processed_hashes()
         self.factory = DataSourceFactory()
