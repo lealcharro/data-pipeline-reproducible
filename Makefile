@@ -11,11 +11,9 @@ help:
 	@echo "  make hooks       - Instalar git hooks"
 
 setup:
-	python -m venv .venv
-	source .venv/bin/activate
-	pip install -r requirements.txt
-	mkdir -p data/{input,intermediate,output}
-	mkdir -p tests/fixtures
+	mkdir -p data/input
+	mkdir -p data/intermediate
+	mkdir -p data/output
 
 build:
 	docker-compose build
@@ -27,8 +25,10 @@ test:
 	pytest tests/ -v --cov=pipeline --cov-report=html
 
 clean:
-	rm -rf data/intermediate/* data/output/*
+	rm -rf data/intermediate/ data/output/
 	rm -rf htmlcov
+	rm -rf .pytest_cache
+	rm .coverage
 	find . -type d -name __pycache__ -exec rm -r {} +
 	docker-compose down -v
 
