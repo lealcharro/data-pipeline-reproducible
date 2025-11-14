@@ -28,6 +28,7 @@ test:
 
 clean:
 	rm -rf data/intermediate/* data/output/*
+	rm -f data/intermediate/.processed_hashes.json
 	rm -rf htmlcov
 	find . -type d -name __pycache__ -exec rm -r {} +
 	docker-compose down -v
