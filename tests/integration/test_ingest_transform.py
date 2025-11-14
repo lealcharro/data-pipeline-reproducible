@@ -22,7 +22,9 @@ def test_ingest_output_can_be_consumed_by_transform():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             ingest_data = json.load(f)
 
@@ -35,7 +37,7 @@ def test_ingest_output_can_be_consumed_by_transform():
                 original_value=input_record.value,
                 normalized_value=0.5,
                 category=input_record.category,
-                processed_at="2024-01-15T11:00:00Z"
+                processed_at="2024-01-15T11:00:00Z",
             )
             assert transformed is not None
 
@@ -59,7 +61,9 @@ def test_ingest_output_batch_processing_compatibility():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             ingest_data = json.load(f)
 
@@ -72,7 +76,7 @@ def test_ingest_output_batch_processing_compatibility():
                 original_value=input_record.value,
                 normalized_value=0.5,
                 category=input_record.category,
-                processed_at="2024-01-15T11:00:00Z"
+                processed_at="2024-01-15T11:00:00Z",
             )
             transformed_records.append(transformed)
 
@@ -89,12 +93,13 @@ def test_component_integration_handles_empty_valid_records():
 
         csv_file = input_dir / "test.csv"
         csv_file.write_text(
-            "id,timestamp,value,category\n"
-            "-1,invalid,42.5,sensor_a\n"
+            "id,timestamp,value,category\n" "-1,invalid,42.5,sensor_a\n"
         )
 
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         assert len(output_files) == 0

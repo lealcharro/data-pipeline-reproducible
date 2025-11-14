@@ -22,7 +22,9 @@ def test_ingest_output_is_valid_json_array():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         assert len(output_files) == 1
 
         with open(output_files[0], "r") as f:
@@ -50,7 +52,9 @@ def test_ingest_output_records_match_input_record_schema():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             data = json.load(f)
 
@@ -81,7 +85,9 @@ def test_ingest_output_records_are_sorted_by_id():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             data = json.load(f)
 
@@ -107,7 +113,9 @@ def test_ingest_output_rejects_invalid_records():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(output_dir))
         ingestor.ingest()
 
-        output_files = [f for f in output_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in output_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             data = json.load(f)
 

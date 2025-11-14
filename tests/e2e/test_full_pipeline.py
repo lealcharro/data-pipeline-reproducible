@@ -28,7 +28,9 @@ def test_end_to_end_csv_to_transformed_records():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(intermediate_dir))
         ingestor.ingest()
 
-        output_files = [f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             ingest_data = json.load(f)
 
@@ -41,7 +43,7 @@ def test_end_to_end_csv_to_transformed_records():
                 original_value=input_record.value,
                 normalized_value=input_record.value / 100.0,
                 category=input_record.category,
-                processed_at="2024-01-15T11:00:00Z"
+                processed_at="2024-01-15T11:00:00Z",
             )
             transformed_records.append(transformed)
 
@@ -67,7 +69,9 @@ def test_end_to_end_with_output_data_schema():
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(intermediate_dir))
         ingestor.ingest()
 
-        output_files = [f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")]
+        output_files = [
+            f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         with open(output_files[0], "r") as f:
             ingest_data = json.load(f)
 
@@ -80,7 +84,7 @@ def test_end_to_end_with_output_data_schema():
                 original_value=input_record.value,
                 normalized_value=0.5,
                 category=input_record.category,
-                processed_at="2024-01-15T11:00:00Z"
+                processed_at="2024-01-15T11:00:00Z",
             )
             transformed_records.append(transformed)
 
@@ -88,7 +92,7 @@ def test_end_to_end_with_output_data_schema():
             total_records=len(transformed_records),
             execution_time_seconds=1.234,
             data_hash="a" * 64,
-            generated_at="2024-01-15T11:00:05Z"
+            generated_at="2024-01-15T11:00:05Z",
         )
 
         output_data = OutputData(records=transformed_records, metadata=metadata)
@@ -106,18 +110,21 @@ def test_end_to_end_idempotency_check():
 
         csv_file = input_dir / "test.csv"
         csv_file.write_text(
-            "id,timestamp,value,category\n"
-            "1,2024-01-15T10:30:00Z,42.5,sensor_a\n"
+            "id,timestamp,value,category\n" "1,2024-01-15T10:30:00Z,42.5,sensor_a\n"
         )
 
         ingestor = Ingestor(input_dir=str(input_dir), output_dir=str(intermediate_dir))
         ingestor.ingest()
 
-        first_run_files = [f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")]
+        first_run_files = [
+            f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         assert len(first_run_files) == 1
 
         ingestor.ingest()
 
-        second_run_files = [f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")]
+        second_run_files = [
+            f for f in intermediate_dir.glob("*.json") if not f.name.startswith(".")
+        ]
         assert len(second_run_files) == 1
         assert len(ingestor.processed_hashes) == 1
