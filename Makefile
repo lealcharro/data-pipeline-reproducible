@@ -26,6 +26,7 @@ test:
 
 clean:
 	rm -rf data/intermediate/ data/output/
+	rm -f data/intermediate/.processed_hashes.json
 	rm -rf htmlcov
 	rm -rf .pytest_cache
 	rm .coverage

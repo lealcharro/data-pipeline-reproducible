@@ -2,7 +2,6 @@ import hashlib
 import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 from pipeline.config import LOG_LEVEL, INPUT_DIR, INTERMEDIATE_DIR
@@ -125,9 +124,8 @@ class Ingestor:
                     logger.error(f"Archivo {csv_file.name} no tiene registros válidos")
                     continue
 
-                # Guardar en intermediate con timestamp
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                output_file = self.output_dir / f"{csv_file.stem}_{timestamp}.json"
+                # Guardar en intermediate con el hash del archivo como nombre
+                output_file = self.output_dir / f"{file_hash}.json"
 
                 # Convertir a JSON manteniendo orden
                 df_valid = pd.DataFrame(valid_records)
@@ -138,7 +136,7 @@ class Ingestor:
                 self.processed_hashes.add(file_hash)
                 self._save_processed_hashes()
 
-                logger.info(f"Procesado: {csv_file.name} → {output_file.name}")
+                logger.info(f"Procesado: {csv_file.name} -> {output_file.name}")
 
             except Exception as e:
                 logger.error(f"Error procesando {csv_file.name}: {str(e)}")
