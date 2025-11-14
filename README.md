@@ -9,6 +9,12 @@ Pipeline ETL local idempotente y determinista para ingesta, transformación y pu
 - Ingesta idempotente con detección de archivos procesados
 - Tests unitarios, integración y contratos
 
+**Sprint 2 - Alcance:**
+- Transformaciones deterministas con ordenamiento por ID
+- Verificador de reproducibilidad mediante comparación de hashes
+- Tests de contrato entre componentes (Ingestor → Transformer)
+- Integración completa del pipeline ETL
+
 ---
 
 ## Objetivos
@@ -22,17 +28,25 @@ Pipeline ETL local idempotente y determinista para ingesta, transformación y pu
 
 ## Arquitectura
 
-### Componentes (Sprint 1)
+### Componentes (Sprint 1 + Sprint 2)
 
 ```
 data/input/          -> Archivos CSV raw
     |
     v
-[Ingestor]           -> Validación + Deduplicación
+[Ingestor]           -> Validación + Deduplicación + Hash
     |
     v
-data/intermediate/   -> JSON validados
+data/intermediate/   -> JSON validados (InputRecord)
+    |
+    v
+[Transformer]        -> Normalización + Agregación + Metadata
+    |
+    v
+data/output/         -> JSON transformados (TransformedRecord + OutputData)
 ```
+
+**Verificador:** Script `verify_reproducibility.py` compara hashes SHA-256 entre ejecuciones
 
 ### Patrones de Diseño
 
@@ -49,6 +63,17 @@ data/intermediate/   -> JSON validados
 - Registro de hashes procesados en `.processed_hashes.json`
 - Garantiza idempotencia entre ejecuciones
 
+**Prototype Pattern (TransformationPrototype)** - Sprint 2
+- Clonación de pipelines de transformación
+- Composición de transformaciones deterministas: normalización, limpieza, metadata
+- Permite aplicar mismas transformaciones a múltiples datasets sin mutación
+- Transformaciones incluyen: `_clean_data()`, `_normalize_values()`, `_add_metadata()`
+
+**Configuración Centralizada (config.py)** - Sprint 2
+- Variables de entorno con `.env` para INPUT_DIR, INTERMEDIATE_DIR, OUTPUT_DIR, LOG_LEVEL
+- Principio DRY: single source of truth para paths y configuración
+- Facilita testing con directorios temporales
+
 ---
 
 ## Como Correr
@@ -61,7 +86,9 @@ make run
 # Opción 2: Local
 make setup
 source .venv/bin/activate
-python pipeline/ingestor/main.py
+python pipeline/ingestor/main.py      # Paso 1: Ingesta
+python pipeline/transformer/main.py    # Paso 2: Transformación
+python scripts/verify_reproducibility.py  # Paso 3: Verificación
 ```
 
 **Comandos disponibles:**
@@ -74,6 +101,8 @@ python pipeline/ingestor/main.py
 | `make test` | Ejecutar suite completa de tests con cobertura |
 | `make clean` | Limpiar artefactos y cache |
 | `make hooks` | Instalar git hooks para validación previa |
+| `make verify-hash` | Verificar reproducibilidad comparando hashes SHA-256 |
+| `make run-all` | Pipeline completo: clean + build + run + verify-hash |
 
 ---
 
@@ -118,9 +147,18 @@ make test
 # Por tipo
 pytest tests/unit/ -v                    # Tests unitarios
 pytest tests/integration/ -v             # Tests de integración
-pytest tests/contracts/ -v               # Contract tests
+pytest tests/contracts/ -v               # Contract tests (Sprint 2)
 pytest tests/e2e/ -v                     # Tests end-to-end
 ```
+
+#### Tests de Contrato (Sprint 2)
+
+Validan interfaces entre componentes:
+- `test_ingest_output_contract.py`: Valida salida del Ingestor
+- `test_transform_input_contract.py`: Valida entrada/salida del Transformer
+- `test_ingest_transform.py`: Tests de integración Ingestor → Transformer
+
+Ver `docs/contracts.md` para detalles completos
 
 ### Quality Gates
 
@@ -136,6 +174,7 @@ pytest tests/e2e/ -v                     # Tests end-to-end
 ## Videos
 
 - **Sprint 1**: https://drive.google.com/file/d/1FagOMbz9wplF_5zPWm5tcINZJQou5mS4/view?usp=drive_link
+- **Sprint 2**: https://drive.google.com/file/d/113OxXJtw3Bj42z_xLeh2NvQekQwHgUYL/view?usp=sharing
 
 ---
 

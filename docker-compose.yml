@@ -19,7 +19,8 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - ingestor
+      ingestor:
+        condition: service_completed_successfully
     volumes:
       - ./data/intermediate:${INTERMEDIATE_DIR:-/data/intermediate}:ro
       - ./data/output:${OUTPUT_DIR:-/data/output}
@@ -34,7 +35,8 @@ services:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - transformer
+      transformer:
+        condition: service_completed_successfully
     volumes:
       - ./data/output:${OUTPUT_DIR:-/data/output}
     env_file:
