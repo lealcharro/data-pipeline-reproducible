@@ -1,6 +1,11 @@
+import hashlib
 import json
 import tempfile
+import time
 from pathlib import Path
+
+import pytest
+
 from pipeline.contracts.schemas import (
     InputRecord,
     OutputData,
@@ -8,6 +13,8 @@ from pipeline.contracts.schemas import (
     TransformedRecord,
 )
 from pipeline.ingestor.main import Ingestor
+from pipeline.publisher.main import Publisher
+from pipeline.transformer.main import Transformer
 
 
 def test_end_to_end_csv_to_transformed_records():
@@ -128,3 +135,67 @@ def test_end_to_end_idempotency_check():
         ]
         assert len(second_run_files) == 1
         assert len(ingestor.processed_hashes) == 1
+
+
+@pytest.fixture
+def temp_dirs():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base = Path(tmpdir)
+        dirs = {
+            "input": base / "input",
+            "intermediate": base / "intermediate",
+            "output": base / "output",
+        }
+        for d in dirs.values():
+            d.mkdir()
+        yield dirs
+
+
+def create_csv_data(num_records: int, base_id: int = 1) -> str:
+    lines = ["id,timestamp,value,category"]
+    for i in range(num_records):
+        record_id = base_id + i
+        timestamp = f"2024-01-15T{10 + i % 14:02d}:{i % 60:02d}:00Z"
+        value = 40.0 + (i % 20)
+        category = f"sensor_{chr(97 + (i % 10))}"
+        lines.append(f"{record_id},{timestamp},{value},{category}")
+    return "\n".join(lines)
+
+
+@pytest.mark.parametrize(
+    "num_records,expected_count",
+    [
+        (100, 100),
+        (1000, 1000),
+    ],
+)
+def test_pipeline_with_different_volumes(
+    temp_dirs, num_records, expected_count
+):
+    csv_file = temp_dirs["input"] / f"test_{num_records}.csv"
+    csv_file.write_text(create_csv_data(num_records))
+
+    ingestor = Ingestor(
+        input_dir=str(temp_dirs["input"]),
+        output_dir=str(temp_dirs["intermediate"]),
+    )
+    ingestor.ingest()
+
+    transformer = Transformer(
+        input_dir=str(temp_dirs["intermediate"]),
+        output_dir=str(temp_dirs["output"]),
+    )
+    transformer.transform()
+
+    publisher = Publisher(output_dir=str(temp_dirs["output"]))
+    result = publisher.publish()
+
+    assert result is True
+    published_files = list(temp_dirs["output"].glob("published_*.json"))
+    assert len(published_files) == 1
+
+    with open(published_files[0], "r") as f:
+        output_data = OutputData(**json.load(f))
+
+    assert output_data.metadata.total_records == expected_count
+    assert len(output_data.records) == expected_count
