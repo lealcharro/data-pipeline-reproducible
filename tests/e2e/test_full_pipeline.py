@@ -200,6 +200,7 @@ def test_pipeline_with_different_volumes(
     assert output_data.metadata.total_records == expected_count
     assert len(output_data.records) == expected_count
 
+
 def calculate_file_hash(file_path: Path) -> str:
     sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
@@ -230,3 +231,35 @@ def test_complete_idempotency_multiple_executions(temp_dirs):
         hashes.append(file_hash)
 
     assert len(set(hashes)) == 1
+
+
+def test_complete_determinism_identical_hash(temp_dirs):
+    csv_file = temp_dirs["input"] / "test.csv"
+    csv_file.write_text(create_csv_data(100))
+
+    data_hashes = []
+    for _ in range(3):
+        for f in temp_dirs["intermediate"].glob("*"):
+            f.unlink()
+        for f in temp_dirs["output"].glob("*"):
+            f.unlink()
+
+        ingestor = Ingestor(
+            input_dir=str(temp_dirs["input"]),
+            output_dir=str(temp_dirs["intermediate"]),
+        )
+        ingestor.ingest()
+
+        transformer = Transformer(
+            input_dir=str(temp_dirs["intermediate"]),
+            output_dir=str(temp_dirs["output"]),
+        )
+        transformer.transform()
+
+        transformed_files = list(temp_dirs["output"].glob("transformed_*.json"))
+        with open(transformed_files[0], "r") as f:
+            output_data = OutputData(**json.load(f))
+
+        data_hashes.append(output_data.metadata.data_hash)
+
+    assert len(set(data_hashes)) == 1
