@@ -23,13 +23,11 @@ class PublisherMetadata:
         source_file: str,
         total_records: int,
         data_hash: str,
-        publisher_version: str = "1.0.0",
     ):
         self.published_at = published_at
         self.source_file = source_file
         self.total_records = total_records
         self.data_hash = data_hash
-        self.publisher_version = publisher_version
 
     def to_dict(self):
         """Convertir a diccionario"""
@@ -38,7 +36,6 @@ class PublisherMetadata:
             "source_file": self.source_file,
             "total_records": self.total_records,
             "data_hash": self.data_hash,
-            "publisher_version": self.publisher_version,
         }
 
 
