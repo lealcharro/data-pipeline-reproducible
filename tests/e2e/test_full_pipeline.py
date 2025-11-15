@@ -169,9 +169,7 @@ def create_csv_data(num_records: int, base_id: int = 1) -> str:
         (1000, 1000),
     ],
 )
-def test_pipeline_with_different_volumes(
-    temp_dirs, num_records, expected_count
-):
+def test_pipeline_with_different_volumes(temp_dirs, num_records, expected_count):
     csv_file = temp_dirs["input"] / f"test_{num_records}.csv"
     csv_file.write_text(create_csv_data(num_records))
 
@@ -222,9 +220,7 @@ def test_complete_idempotency_multiple_executions(temp_dirs):
         ingestor.ingest()
 
         intermediate_files = list(temp_dirs["intermediate"].glob("*.json"))
-        non_hash_files = [
-            f for f in intermediate_files if not f.name.startswith(".")
-        ]
+        non_hash_files = [f for f in intermediate_files if not f.name.startswith(".")]
 
         assert len(non_hash_files) == 1
         file_hash = calculate_file_hash(non_hash_files[0])
@@ -293,3 +289,30 @@ def test_recovery_invalid_data_pydantic(temp_dirs):
     assert len(data) == 2
     assert data[0]["id"] == 1
     assert data[1]["id"] == 3
+
+
+@pytest.mark.parametrize("num_records", [500, 1000])
+def test_performance_execution_time(temp_dirs, num_records):
+    csv_file = temp_dirs["input"] / "test.csv"
+    csv_file.write_text(create_csv_data(num_records))
+
+    start_time = time.time()
+
+    ingestor = Ingestor(
+        input_dir=str(temp_dirs["input"]),
+        output_dir=str(temp_dirs["intermediate"]),
+    )
+    ingestor.ingest()
+
+    transformer = Transformer(
+        input_dir=str(temp_dirs["intermediate"]),
+        output_dir=str(temp_dirs["output"]),
+    )
+    transformer.transform()
+
+    publisher = Publisher(output_dir=str(temp_dirs["output"]))
+    publisher.publish()
+
+    execution_time = time.time() - start_time
+
+    assert execution_time < 60.0
