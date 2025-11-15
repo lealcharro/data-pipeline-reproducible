@@ -13,12 +13,10 @@ def test_publisher_metadata_creation():
         source_file="transformed_123.json",
         total_records=5,
         data_hash="a" * 64,
-        publisher_version="1.0.0",
     )
 
     # Assert
     assert metadata.to_dict()["total_records"] == 5
-    assert metadata.to_dict()["publisher_version"] == "1.0.0"
 
 
 def test_publisher_finds_latest_transformed_file():
@@ -143,7 +141,6 @@ def test_publisher_end_to_end_publish():
             metadata = json.load(f)
         assert metadata["source_file"] == "transformed_123.json"
         assert metadata["total_records"] == 2
-        assert metadata["publisher_version"] == "1.0.0"
 
 
 def test_publisher_fails_when_no_files():
