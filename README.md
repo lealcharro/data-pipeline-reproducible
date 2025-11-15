@@ -15,6 +15,13 @@ Pipeline ETL local idempotente y determinista para ingesta, transformación y pu
 - Tests de contrato entre componentes (Ingestor → Transformer)
 - Integración completa del pipeline ETL
 
+**Sprint 3 - Alcance:**
+- Publicación de datos transformados con metadata y timestamps
+- Tests end-to-end del pipeline completo con datasets reales
+- Verificación de idempotencia, determinismo y performance
+- Tests de recuperación ante errores
+- Reporte final de métricas y aprendizajes del proyecto
+
 ---
 
 ## Objetivos
@@ -28,7 +35,7 @@ Pipeline ETL local idempotente y determinista para ingesta, transformación y pu
 
 ## Arquitectura
 
-### Componentes (Sprint 1 + Sprint 2)
+### Componentes (Sprint 1 + Sprint 2 + Sprint 3)
 
 ```
 data/input/          -> Archivos CSV raw
@@ -44,9 +51,16 @@ data/intermediate/   -> JSON validados (InputRecord)
     |
     v
 data/output/         -> JSON transformados (TransformedRecord + OutputData)
+    |
+    v
+[Publisher]          -> Publicación con timestamp + Metadata final
+    |
+    v
+data/output/         -> JSON publicados (published_*.json)
 ```
 
 **Verificador:** Script `verify_reproducibility.py` compara hashes SHA-256 entre ejecuciones
+**Publisher (Sprint 3):** Componente final que lee datos transformados, genera metadata completa y publica con timestamp
 
 ### Patrones de Diseño
 
@@ -88,7 +102,8 @@ make setup
 source .venv/bin/activate
 python pipeline/ingestor/main.py      # Paso 1: Ingesta
 python pipeline/transformer/main.py    # Paso 2: Transformación
-python scripts/verify_reproducibility.py  # Paso 3: Verificación
+python pipeline/publisher/main.py      # Paso 3: Publicación
+python scripts/verify_reproducibility.py  # Paso 4: Verificación
 ```
 
 **Comandos disponibles:**
@@ -160,6 +175,15 @@ Validan interfaces entre componentes:
 
 Ver `docs/contracts.md` para detalles completos
 
+#### Tests End-to-End (Sprint 3)
+
+Validan el pipeline completo con datasets reales:
+- `test_full_pipeline.py`: Tests E2E con diferentes volúmenes de datos
+- **Idempotencia**: Múltiples ejecuciones producen hashes idénticos
+- **Determinismo**: Comparación de data_hash en metadata entre ejecuciones
+- **Performance**: Verificación de tiempo de ejecución < 60s
+- **Recuperación**: Manejo de datos inválidos con validación Pydantic
+
 ### Quality Gates
 
 | Gate | Criterio | Comando |
@@ -175,11 +199,18 @@ Ver `docs/contracts.md` para detalles completos
 
 - **Sprint 1**: https://drive.google.com/file/d/1FagOMbz9wplF_5zPWm5tcINZJQou5mS4/view?usp=drive_link
 - **Sprint 2**: https://drive.google.com/file/d/113OxXJtw3Bj42z_xLeh2NvQekQwHgUYL/view?usp=sharing
+- **Sprint 3**: https://drive.google.com/file/d/1N39-CrzL14VKuw3nOGHB0--yM3LdeTsC/view?usp=sharing
+
+---
+
+## Documentación
+
+- **Reporte Final**: `docs/reporte_final.md` - Métricas, story points, tests, calidad de código y aprendizajes
 
 ---
 
 ## Equipo 7
 
 - Aaron Flores Alberca
-- Diego Delgado
+- Diego Delgado Velarde
 - Leonardo Chacon Roque
