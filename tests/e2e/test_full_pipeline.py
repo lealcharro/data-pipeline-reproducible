@@ -263,3 +263,33 @@ def test_complete_determinism_identical_hash(temp_dirs):
         data_hashes.append(output_data.metadata.data_hash)
 
     assert len(set(data_hashes)) == 1
+
+
+def test_recovery_invalid_data_pydantic(temp_dirs):
+    csv_file = temp_dirs["input"] / "test.csv"
+    csv_data = """id,timestamp,value,category
+1,2024-01-15T10:30:00Z,42.5,sensor_a
+-5,invalid-timestamp,abc,sensor_b
+3,2024-01-15T10:32:00Z,45.8,sensor_c"""
+    csv_file.write_text(csv_data)
+
+    ingestor = Ingestor(
+        input_dir=str(temp_dirs["input"]),
+        output_dir=str(temp_dirs["intermediate"]),
+    )
+    ingestor.ingest()
+
+    intermediate_files = [
+        f
+        for f in temp_dirs["intermediate"].glob("*.json")
+        if not f.name.startswith(".")
+    ]
+
+    assert len(intermediate_files) == 1
+
+    with open(intermediate_files[0], "r") as f:
+        data = json.load(f)
+
+    assert len(data) == 2
+    assert data[0]["id"] == 1
+    assert data[1]["id"] == 3
